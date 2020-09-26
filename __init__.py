@@ -291,6 +291,8 @@ class IMP_OT_FBX(bpy.types.Operator):
                 drb.integrationEyelashes()
                 Global.deselect()
             ds.makeDct()
+            DtbMaterial.McyFresnel()
+            DtbMaterial.McyMicro()
             DtbMaterial.McySkin()
             DtbMaterial.McyEyeWet()
             DtbMaterial.McyEyeDry()
