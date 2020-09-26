@@ -31,6 +31,7 @@ from . import FitBone
 from . import CustomBones
 from . import Util
 from . import WCmd
+from . import Octane
 from bpy.props import EnumProperty
 from bpy.props import BoolProperty
 from bpy.props import StringProperty
@@ -297,6 +298,7 @@ class IMP_OT_FBX(bpy.types.Operator):
             self.pbar(35, wm)
             ds.propTexture()
             self.pbar(40, wm)
+            Octane.Octane()
             if Global.getIsGen():
                 drb.fixGeniWeight(db)
             Global.deselect()

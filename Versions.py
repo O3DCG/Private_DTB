@@ -112,8 +112,11 @@ def make_camera():
         bpy.ops.object.camera_add(align='WORLD', enter_editmode=False,
                                   location=(0.21 * size, -0.802 * size, 1.631 * size),
                                   rotation=(math.radians(91), 0, math.radians(15.2)))
-    Util.to_other_collection([bpy.context.object],'DAZ_PUB',Util.cur_col_name())
     bpy.context.object.name = 'daz_cam'
+    for i in range(3):
+        bpy.context.object.scale[i] = size/0.01
+    Util.to_other_collection([bpy.context.object],'DAZ_PUB',Util.cur_col_name())
+
 
 
 def pivot_active_element_and_center_and_trnormal():

@@ -57,7 +57,7 @@ class DtbShaders:
     def __init__(self):
         pass
 
-    def eyelash(self,ROOT,LINK,cyclesOUT,eeveeOUT):
+    def eyelash(self,ROOT,LINK,cyclesOUT,eeveeOUT,mname):
         adr = ""
         ALF = ROOT.new(type='ShaderNodeBsdfTransparent')
         if "0t" in self.dct.keys():
@@ -67,6 +67,7 @@ class DtbShaders:
             LINK.new(ALF.outputs['BSDF'], eeveeOUT.inputs[0])
             return
         SNTIMG = ROOT.new(type='ShaderNodeTexImage')
+        SNTIMG.name = Global.img_format(mname, "t")
         img = bpy.data.images.load(filepath=adr)
         SNTIMG.image = img
         MIX = ROOT.new(type='ShaderNodeMixShader')
@@ -123,7 +124,7 @@ class DtbShaders:
                     elif mban==0:
                         Versions.eevee_alpha(mat, 'BLEND', 0)
                         ROOT.remove(SNBP)
-                        self.eyelash(ROOT, LINK, cyclesOUT, eeveeOUT)
+                        self.eyelash(ROOT, LINK, cyclesOUT, eeveeOUT,mname)
                         slot.material = mat
                         break
                     else:
@@ -163,6 +164,7 @@ class DtbShaders:
                             if os.path.exists(adr) == False:
                                 continue
                             SNTIMG =  ROOT.new(type='ShaderNodeTexImage')
+                            SNTIMG.name = Global.img_format(mname, ft[0])
                             img = bpy.data.images.load(filepath=adr)
                             SNTIMG.image = img
                             out_sntimg_color = SNTIMG.outputs['Color']
@@ -227,6 +229,7 @@ class DtbShaders:
                                         continue
                                     if ca[0].endswith(ft[0]):
                                         SNTIMG = ROOT.new(type='ShaderNodeTexImage')
+                                        SNTIMG.name = Global.img_format(mat.name, ft[0])
                                         img = bpy.data.images.load(filepath=ca[1])
                                         SNTIMG.image = img
                                         Versions.to_color_space_non(SNTIMG)
