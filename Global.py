@@ -28,6 +28,7 @@ _ISG3 = 0
 _HOMETOWN = ""
 already_use_newmtl = []
 _ENVROOT = ""
+_OCTANE = 0
 
 G3_GEOIDX = 3
     #####Female#######
@@ -77,6 +78,9 @@ def isAcs():
     wk = wk.strip()
     wk = wk.lower()
     return wk=='#accessory'
+
+def img_format(mname,kind):
+    return mname + "-IMG." + kind + "-"
 
 def if_octane():
     global _OCTANE
