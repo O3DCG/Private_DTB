@@ -285,10 +285,10 @@ def adjust_material(kind,inc_value,isEye):
     ]
     flg_skin = False
     if isEye:
-        tree = getGroupNodeTree(NGROUP3[EDRY])
+        tree = getGroupNodeTree(ngroup3(EDRY))
         tbls = eyecombi
     else:
-        tree = getGroupNodeTree(NGROUP3[SKIN])
+        tree = getGroupNodeTree(ngroup3(SKIN))
         tbls = skincombi
         flg_skin = True
     if tree is None:
@@ -332,7 +332,7 @@ def getNidx(idx,nodes):
 def toGroupInputsDefault(flg_eye):
     k3 = [EDRY, EWET, SKIN]
     for kidx, k in enumerate(k3):
-        dist_n = getGroupNode(NGROUP3[k])
+        dist_n = getGroupNode(ngroup3(k))
         for mat in bpy.data.materials:
             if mat.node_tree is None:
                 continue
