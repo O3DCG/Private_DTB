@@ -78,6 +78,17 @@ def isAcs():
     wk = wk.lower()
     return wk=='#accessory'
 
+def if_octane():
+    global _OCTANE
+    if _OCTANE==0:
+        try:
+            bpy.context.scene.octane
+            _OCTANE = 1
+        except AttributeError as e:
+            print("octane_error",e)
+            _OCTANE = -1
+    return _OCTANE>0
+
 def getSubdivLevel():
     naga = len(getBody().data.vertices)
     if naga>200000:
