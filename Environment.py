@@ -566,7 +566,7 @@ class ReadFbx:
                 ss = p.split(',')
                 #manage [_dup_] files
                 for i in range(2,20):
-                    if ss[0].endswith(" (" + str(i) + ")"):
+                    if ss[0]!=ss[1] and ss[0].endswith(" (" + str(i) + ")"):
                         if not ss[1].endswith("_dup_" + str(i)):
                             ss[1] = ss[1] + "_dup_" + str(i)
                         break
