@@ -25,6 +25,8 @@ class Octane:
 
 
     mtable = DtbMaterial.mtable
+    def config(self):
+        bpy.context.scene.octane.ray_epsilon = 0.0000001
     def __init__(self):
         if Global.if_octane()==False:
             return

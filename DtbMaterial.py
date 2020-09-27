@@ -254,7 +254,7 @@ def getGroupNode(key):
     for slot in Global.getBody().material_slots:
         ROOT = bpy.data.materials[slot.name].node_tree.nodes
         for n in ROOT:
-            if n.name.startswith("Group"):
+            if n.type=='GROUP':
                 if n.node_tree.name.startswith(key):
                     return n
 
@@ -280,8 +280,8 @@ def adjust_material(kind,inc_value,isEye):
     ['Bump.Strength', 6, 0],
     ['Bump.Distance', 6, 1],
     ['Displacement.Height',4,2],#14
-    ['Subsurface.Scale', 2, 2],
-    ['Subsurface.Scale', 2, 1],
+    #['Subsurface.Scale', 2, 2],
+    #['Subsurface.Scale', 2, 1],
     ]
     eyecombi = [
         ['Base Color.Bright', 1, 1],
@@ -295,10 +295,10 @@ def adjust_material(kind,inc_value,isEye):
     ]
     flg_skin = False
     if isEye:
-        tree = getGroupNodeTree(NGROUP3[EDRY])
+        tree = getGroupNodeTree(ngroup3(EDRY))
         tbls = eyecombi
     else:
-        tree = getGroupNodeTree(NGROUP3[SKIN])
+        tree = getGroupNodeTree(ngroup3(SKIN))
         tbls = skincombi
         flg_skin = True
     if tree is None:
@@ -313,9 +313,9 @@ def adjust_material(kind,inc_value,isEye):
                 if tidx > 8 and tidx<16:
                     cg = cg * Global.getSize() * 0.01
                 if tidx == 9:
-                    cg = cg * 3
+                    cg = cg * 12#3
                 elif tidx == 10:
-                    cg = cg * 0.5
+                    cg = cg * 2#0.5
                 elif tidx==16:
                     cg = cg * 0.2
                 # elif tidx==14:
@@ -342,7 +342,7 @@ def getNidx(idx,nodes):
 def toGroupInputsDefault(flg_eye):
     k3 = [EDRY, EWET, SKIN]
     for kidx, k in enumerate(k3):
-        dist_n = getGroupNode(NGROUP3[k])
+        dist_n = getGroupNode(ngroup3(k))
         for mat in bpy.data.materials:
             if mat.node_tree is None:
                 continue
@@ -375,10 +375,10 @@ def toGroupInputsDefault(flg_eye):
                 for i, inp in enumerate(sch_n.inputs):
                     if len(inp.links) > 0:
                         continue
-                    values = [(0.067,0.378,0.752,1.0),0.5,(0,0,0,1.0),(1.0,1.0,1.0,1.0), 0.45,  #0
-                              1.0,(0.067,0.661,0.766,1.0),0.7,0.15,(0.984,0.072,0.072,1.0), #5
-                              0.3,0.5,(0.5,0.5,0.5,1.0),(0.5, 0.5, 1, 1),(0.2,0.2,0.2,1.0), #10
-                              0.5,  #15
+                    values = [(0.067,0.378,0.752,1.0),0.5,(0.5,0.5,0.5,1.0),0.5, (0.45,0.45,0.45,1),  #0
+                              0.01*Global.getSize(),(0.067,0.661,0.766,1.0),0.7,0.15,(0.984,0.072,0.072,1.0), #5 Scale~
+                              0.3,0.5,(0.5,0.5,0.5,1.0),(0.5, 0.5, 1, 1),(0.2,0.2,0.2,1.0), #10 SSS2 Weight~
+
                               ]
                     inp.default_value = values[i]
 
@@ -444,16 +444,6 @@ def toEyeWetDefault(ntree):
     NodeArrange.toNodeArrange(ntree.nodes)
 
 
-gene = ['NodeGroupInput','NodeGroupOutput','ShaderNodeBsdfDiffuse','ShaderNodeMixRGB.MIX', #0
-                         'ShaderNodeDisplacement','ShaderNodeNormalMap', 'ShaderNodeBump','mcy_Fresnel_PBR', #4
-                         'ShaderNodeBrightContrast','','','ShaderNodeHueSaturation',                           #8
-                         'ShaderNodeBsdfGlossy','ShaderNodeSubsurfaceScattering','', 'ShaderNodeMixRGB.MIX' ,      #12
-                          'ShaderNodeMixShader', '','','',                                    #16
-                        'ShaderNodeMixRGB.OVERLAY','ShaderNodeMixRGB.OVERLAY', 'ShaderNodeAddShader','ShaderNodeAddShader',#20
-                        'mcy_MicroRough_PBR' ,'ShaderNodeMath.POWER'  #24
-
-                         ]           #16
-
 def toSkinDefault(ntree):
     if ntree is None:
         return
@@ -469,31 +459,31 @@ def toSkinDefault(ntree):
            [13, 1, Global.getSize()*0.005],  # BlueSSS
            [14, 1, Global.getSize()*0.030],  # RedSSS
            [8, 1, 0.0],
-           [9, 1, 0.1],
-           [10, 1, 0],
+           [9, 1, 0.0],
+           [10, 1, -0.5],
            [8, 2, 0.0],
            [9, 2, 0.0],
            [10, 2, 0.0],
-          # [2, 1, 0.1],
-          # [2, 4, 0.0],
-          # [2, 'IOR', 1.33],
-          # [2, 'Transmission', 0.0],
-          # [2, 'Alpha', 1.0],
+           [2, 1, 0.0],
+           [2, 4, 0.0],
+           [2,7,0.0],
+           [2, 'IOR', 1.33],
+           [2, 'Transmission', 0.0],
+           [2, 'Alpha', 1.0],
            [4, 2, Global.getSize()*0.0012],#Displacement Height
            [4, 1, Global.getSize()*0.005],#Displacement Middle
-           [13, 4, 0.1],
-           [14, 4, 0.1],
-         #  [2, 14, 1.33],
-         #  [2,2,[0.04*Global.getSize(),0.008*Global.getSize(),0.002*Global.getSize()]],
+           [13, 4, 0.0],#SSS node1 texture blur
+           [14, 4, 0.5],#SSS node2 texture blur
            [11,0,0.5],
            [11,1,1.0],
            [11,2,1.0],
            [7,0,1.33],
+           [20,0,1.0], #Overlay
+           [21, 0, 1.0],#Overlay
            ]
     for dv in dvs:
         dv0 = getNidx(int(dv[0]),nds)
         if isinstance(dv[2], float) or isinstance(dv[2], int):
-            print(">>>>>>>>>>>>",nds[dv0])
             nds[dv0].inputs[dv[1]].default_value = dv[2]
         else:
             for i in range(len(dv[2])):
@@ -519,7 +509,6 @@ class McyEyeDry:
         
     def makegroup(self):
         self.mcy_eyedry = bpy.data.node_groups.new(type="ShaderNodeTree", name=ngroup3(EDRY))
-        nsc = 'NodeSocketColor'
         self.mcy_eyedry.inputs.new(gio4[0], 'Diffuse')
         self.mcy_eyedry.inputs.new(gio4[0], 'Bump')
         self.mcy_eyedry.inputs.new(gio4[0], 'Normal')
@@ -543,32 +532,7 @@ class McyEyeDry:
                     [[2, 0], [5, 2]],
         ]
         connect_group(con_nums, self.mcy_eyedry, self.shaders, generatenames)
-        """
-        ROOT = self.mcy_eyedry.nodes
-        LINK = self.mcy_eyedry.links
-        old_gname = ""
-        for gidx, gname in enumerate(generatenames):
-            if gname == '':
-                gname = old_gname
-            a = gname.find('.')
-            sub = None
-            if a > 0:
-                sub = gname[a + 1:]
-                gname = gname[:a]
-            n = ROOT.new(type=gname)
-            n.name = gname + "-" + str(gidx)
-            if sub is not None:
-                n.blend_type = sub
-            self.shaders.append(n)
-            old_gname = gname
-        for cn in con_nums:
-            outp = cn[0]
-            inp = cn[1]
-            LINK.new(
-                self.shaders[outp[0]].outputs[outp[1]],
-                self.shaders[inp[0]].inputs[inp[1]]
-            )
-        """
+
 class McyEyeWet:
     shaders = []
     mcy_eyewet = None
@@ -581,7 +545,6 @@ class McyEyeWet:
         
     def makegroup(self):
         self.mcy_eyewet  = bpy.data.node_groups.new(type="ShaderNodeTree", name=ngroup3(EWET))
-        nsc = 'NodeSocketColor'
         self.mcy_eyewet.inputs.new(gio4[0], 'Bump')
         self.mcy_eyewet.inputs.new(gio4[0],"Normal")
         self.mcy_eyewet.outputs.new(gio4[3], 'Cycles')
@@ -603,36 +566,8 @@ class McyEyeWet:
                     [[5, 0], [8, 1]],
         ]
         connect_group(con_nums, self.mcy_eyewet, self.shaders, generatenames)
-        """
-        ROOT = self.mcy_eyewet.nodes
-        LINK = self.mcy_eyewet.links
-        old_gname = ""
-        for gidx, gname in enumerate(generatenames):
-            if gname == '':
-                gname = old_gname
-
-            a = gname.find('.')
-            sub = None
-            if a > 0:
-                sub = gname[a + 1:]
-                gname = gname[:a]
-            n = ROOT.new(type=gname)
-            n.name = gname + "-" + str(gidx)
-            if sub is not None:
-                n.blend_type = sub
-            self.shaders.append(n)
-            old_gname = gname
-        for cn in con_nums:
-            outp = cn[0]
-            inp = cn[1]
-            LINK.new(
-                self.shaders[outp[0]].outputs[outp[1]],
-                self.shaders[inp[0]].inputs[inp[1]]
-            )
-        """
 gio4 = ['NodeSocketColor', 'NodeSocketFloat', 'NodeSocketVector', 'NodeSocketShader']
 
-NGROUP2 = ['FRESNEL','MICRO']
 
 
 def connect_group(con_nums,ngroup,shaders,generatenames):
@@ -675,8 +610,6 @@ def connect_group(con_nums,ngroup,shaders,generatenames):
         )
     NodeArrange.toNodeArrange(ngroup.nodes)
 
-
-
 class McyFresnel:
     shaders = []
     mcy_fresnel = None
@@ -693,11 +626,14 @@ class McyFresnel:
         self.mcy_fresnel.inputs.new(gio4[1], 'Gloss')
         self.mcy_fresnel.inputs.new(gio4[2], 'Normal')
         self.mcy_fresnel.outputs.new(gio4[0],'Shader')
+        self.mcy_fresnel.inputs[0].default_value = 1.33
+        self.mcy_fresnel.inputs[1].default_value = (0.0,0.0,0.0,1.0)
+        self.mcy_fresnel.inputs[2].default_value = (1.0,1.0,1.0,1.0)
+
     def exe_fresnel(self):
         generatenames = ['NodeGroupInput', 'NodeGroupOutput','ShaderNodeBump','ShaderNodeNewGeometry',#0
                          'ShaderNodeFresnel','','ShaderNodeMixRGB.MIX','',#4
                          'ShaderNodeMath.SUBTRACT','','ShaderNodeMath.DIVIDE',]#8
-
         col_nums = [
             #IOR
             [[0,0],[4,0]],
@@ -728,7 +664,6 @@ class McyFresnel:
         ]
         connect_group(col_nums,self.mcy_fresnel,self.shaders,generatenames)
 
-
 class McyMicro:
     shaders = []
     mcy_micro = None
@@ -743,8 +678,8 @@ class McyMicro:
         self.mcy_micro.inputs.new(gio4[0], 'Roughness')
         self.mcy_micro.inputs.new(gio4[1], 'Micro Rough Weight')
         self.mcy_micro.inputs.new(gio4[2], 'Normal')
-        self.mcy_micro.outputs.new(gio4[0], 'Gross Power2')
-
+        self.mcy_micro.outputs.new(gio4[1], 'Gross Power')
+        self.mcy_micro.inputs[1].default_value = 0.5
 
     def exe_micro(self):
         generatenames = ['NodeGroupInput','mcy_Fresnel_PBR','ShaderNodeMixRGB.MIX','ShaderNodeMath.POWER',
@@ -756,14 +691,19 @@ class McyMicro:
             [[0,0,],[1,'F0']],
             [[2,0],[3,0]],
             [[3,0],[4,0]],
+            [[1,0],[2,2]]
         ]
         connect_group(con_nums,self.mcy_micro,self.shaders,generatenames)
+        self.shaders[1].inputs[1].default_value = (1.0, 1.0, 1.0, 1.0)
+        self.shaders[1].inputs[2].default_value = (0.0, 0.0, 0.0, 1.0)
 
 
 class McySkin:
     shaders = []
     mcy_skin = None
     def __init__(self):
+        McyFresnel()
+        McyMicro()
         self.shaders = []
         self.mcy_skin = None
         self.makegroup()
@@ -771,12 +711,11 @@ class McySkin:
 
     def makegroup(self):
         self.mcy_skin = bpy.data.node_groups.new(type="ShaderNodeTree", name=ngroup3(SKIN))
-
         self.mcy_skin.inputs.new(gio4[0], 'Diffuse')
         self.mcy_skin.inputs.new(gio4[1], 'Diffuse Weight')
         self.mcy_skin.inputs.new(gio4[0], 'Specular')
-        self.mcy_skin.inputs.new(gio4[0], 'Specular F1')
-        self.mcy_skin.inputs.new(gio4[1], 'Roughness')
+        self.mcy_skin.inputs.new(gio4[1], "MicroRoughness")
+        self.mcy_skin.inputs.new(gio4[0], 'Roughness')
         self.mcy_skin.inputs.new(gio4[1], 'Scale')
         self.mcy_skin.inputs.new(gio4[0], "SSS1")            #6
         self.mcy_skin.inputs.new(gio4[1], "SSS1 Weight")
@@ -787,20 +726,20 @@ class McySkin:
         self.mcy_skin.inputs.new(gio4[0], 'Bump')             #12
         self.mcy_skin.inputs.new(gio4[0], 'Normal')            #13
         self.mcy_skin.inputs.new(gio4[0], 'Displacement')      #14
-        self.mcy_skin.inputs.new(gio4[1], "MicroRoughness")
+
 
         self.mcy_skin.outputs.new(gio4[3], 'Cycles')
         self.mcy_skin.outputs.new(gio4[2], 'Displacement')
         self.mcy_skin.outputs.new(gio4[3], 'EEVEE')
 
     def exeSkin(self):
-        generatenames = ['NodeGroupInput','NodeGroupOutput','ShaderNodeBsdfDiffuse','ShaderNodeMixRGB.MIX', #0
+        generatenames = ['NodeGroupInput','NodeGroupOutput','ShaderNodeBsdfPrincipled','ShaderNodeValue',#MixRGB.MIX', #0
                          'ShaderNodeDisplacement','ShaderNodeNormalMap', 'ShaderNodeBump','mcy_Fresnel_PBR', #4
                          'ShaderNodeBrightContrast','','','ShaderNodeHueSaturation',                           #8
-                         'ShaderNodeBsdfGlossy','ShaderNodeSubsurfaceScattering','', 'ShaderNodeMixRGB.MIX' ,      #12
+                         'ShaderNodeBsdfGlossy','ShaderNodeSubsurfaceScattering','', 'ShaderNodeMath.POWER' ,      #12
                           'ShaderNodeMixShader', '','','',                                    #16
-                        'ShaderNodeMixRGB.OVERLAY','ShaderNodeMixRGB.OVERLAY', 'ShaderNodeAddShader','ShaderNodeAddShader',#20
-                        'mcy_MicroRough_PBR' ,'ShaderNodeMath.POWER'  #24
+                        'ShaderNodeMixRGB.OVERLAY','ShaderNodeMixRGB.OVERLAY', 'ShaderNodeAddShader','',#20
+                        'mcy_MicroRough_PBR' ,  #24
 
                          ]           #16
         con_nums = [#Diffuse
@@ -815,16 +754,16 @@ class McySkin:
                     #SSS1
                     [[0, 6], [20, 2]],
                     [[20, 0], [13, 0]],
-                    [[13, 0],[ 16, 2]], #!!!!
+                    [[13, 0],[ 16, 2]],
                     #SSS1 Weight
                     [[0,7],[16,0]],
                     #SSS1 Radius
-                    [[0,7],[13,2]],
+                    [[0,8],[13,2]],
 
                     #SSS2
                     [[0, 9], [21, 2]],
                     [[21,0],[14,0]],
-                    [[14, 0], [17, 2]], #!!!!
+                    [[14, 0], [17, 2]],
                     #SSS2 Weight
                     [[0,10],[17,0]],
                     #SSS2 Radius
@@ -858,51 +797,30 @@ class McySkin:
                     [[6, 0], [24, 'Normal']],
 
                     #Specular
-                    [[0,2],[7,1]],
-                    [[0, 3], [7, 2]],
+                    [[0,2],[9,0]],
+                    [[9,0],[2,"Specular"]],
 
                     #Gloss
                     [[12,0],[23,1]],       #!!!!
 
                     #Roughness
-                    [[0,4],[24,0]],
-                     [[24,0],[7,'Gloss']],
-                    [[24,0],[25,0]],
-                    [[25,0],[12,1]],
+                    [[0,4],[10,0]],
+                    [[10,0],[2,'Roughness']],
+
+
+                    #mcy_micro
+                    [[3,0],[24,'Roughness']],
+                    [[24,0],[7,'Gloss']],
+                    [[24,0],[15,0]],
+                    [[15,0],[12,1]],
+                    [[0,3],[24,1]],
 
                     #Displacement
                     [[0,12],[4,0]],
                     [[4,0],[1,1]],
             ]
         connect_group(con_nums, self.mcy_skin, self.shaders, generatenames)
-        """
-        ROOT = self.mcy_skin.nodes
-        LINK = self.mcy_skin.links
-        old_gname = ""
-        for gidx,gname in enumerate(generatenames):
-            if gname=='':
-                gname = old_gname
-            a = gname.find('.')
-            sub = None
-            if a>0:
-                sub = gname[a+1:]
-                gname = gname[:a]
-            n = ROOT.new(type=gname)
-            n.name = gname + "-" + str(gidx)
-            if sub is not None:
-                n.blend_type = sub
-            self.shaders.append(n)
-            old_gname = gname
-        for cidx,cn in enumerate(con_nums):
-            outp = cn[0]
-            inp = cn[1]
-            LINK.new(
-                self.shaders[outp[0]].outputs[outp[1]],
-                self.shaders[inp[0]].inputs[inp[1]]
-            )
-        NodeArrange.toNodeArrange(self.mcy_skin.nodes)
-        """
-
+        self.shaders[3].outputs[0].default_value = 0.5
 def forbitMinus():
     pbsdf = 'Principled BSDF'
     for dobj in Util.myccobjs():
