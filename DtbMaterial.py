@@ -781,7 +781,7 @@ class McySkin:
                     [[7,0],[12,0]],
                     [[19,0],[23,0]],# mix to add
                     [[23,0],[1,0]],
-
+                     [[23, 0], [1, 2]],
 
                     # Normal
                     [[0, 13], [5, 'Color']],
@@ -818,6 +818,7 @@ class McySkin:
                     #Displacement
                     [[0,12],[4,0]],
                     [[4,0],[1,1]],
+
             ]
         connect_group(con_nums, self.mcy_skin, self.shaders, generatenames)
         self.shaders[3].outputs[0].default_value = 0.5

@@ -34,8 +34,7 @@ class Octane:
         print("OctSkin2().finished")
         for obj in Util.myacobjs():
             print(obj.name)
-            if obj==Global.getBody():
-                self.execute(obj)
+            self.execute(obj)
 
         Versions.make_camera()
 
@@ -71,12 +70,17 @@ class Octane:
 
             ROOT = mat.node_tree.nodes
             LINK = mat.node_tree.links
+            flg_universe = False
             outmat = ROOT.new(type='ShaderNodeOutputMaterial')
             if mban==8:
                 self.eye_wet(ROOT,LINK)
                 continue
             if mban==7:
                 universe = ROOT.new(type='ShaderNodeOctGlossyMat')
+
+            elif mban<=0:
+                universe = ROOT.new(type='ShaderNodeOctUniversalMat')
+                flg_universe = True
             else:
                 universe = ROOT.new(type='ShaderNodeGroup')
                 universe.node_tree = bpy.data.node_groups[oct_ngroup3(SKIN)]
@@ -91,14 +95,17 @@ class Octane:
                             OCTIMG.name = mat.name+"-OCT." + ft[0] + "-"
                             img = bpy.data.images.load(filepath=adr)
                             OCTIMG.image = img
-                            LINK.new(universe.inputs[ft[1]],OCTIMG.outputs['OutTex'])
+                            inputname = ft[1]
+                            if flg_universe and inputname=='Diffuse':
+                                inputname = 'Albedo color'
+                            LINK.new(universe.inputs[inputname],OCTIMG.outputs['OutTex'])
                             for tt in ttable:
                                 if tt[0]==ft[0]:
                                     tt[1] = OCTIMG
                                     if tt[0]=='d':
                                         ttable[1][1] = OCTIMG
                                     break
-                            if ft[1]=='Diffuse' and mban !=7:
+                            if inputname=='Diffuse' and mban !=7 and flg_universe==False:
                                 LINK.new(universe.inputs[ft[1]+"2"], OCTIMG.outputs['OutTex'])
             self.after_execute(ROOT,LINK,ttable,universe)
             toGroupInputsDefault(mban==7)
@@ -402,3 +409,5 @@ class OctSkin:
                 self.shaders[inp[0]].inputs[inp[1]]
             )
         NodeArrange.toNodeArrange(self.mcy_skin.nodes)
+
+#console:"C:\Program Files\BlenderOctane\blender.exe"
