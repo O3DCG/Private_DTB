@@ -422,9 +422,9 @@ class ReadFbx:
                     for node in ROOT:
                         if node.name=='Normal Map':
                             normal = node
-                            break
                         elif node.type=='TEX_IMAGE':
                             kigo = DtbMaterial.getTexKigo(node)
+                            print("ENVENVENV",mat.name,kigo)
                             node.name = Global.img_format(mat.name,kigo)
                             if kigo=='d' or kigo=='t':
                                 bcolor_by_asc = node.image.filepath
