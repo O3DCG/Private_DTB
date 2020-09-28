@@ -209,44 +209,46 @@ class DtbShaders:
                         Versions.eevee_alpha(mat, 'BLEND', 0)
                     name4= ['Material Output', 'Image Texture', 'Principled BSDF','Normal Map']
                     source_adr = ""
-                    if len(mat.node_tree.nodes)==5 or len(mat.node_tree.nodes)==4:
-                        for node in ROOT:
-                            for nidx,nm in enumerate(name4):
-                                if node.name == nm:
-                                    count += 1
-                                    if nidx==1:
-                                        source_adr = node.image.filepath
-                                    elif nidx==2:
-                                        PBSDF = node
-                                    elif nidx==3:
-                                        NORM = node
-                        if source_adr!="":
-                            md = MatDct.MatDct()
-                            cary = md.cloth_dct_0(source_adr)
-                            pandb = insertBumpMap(ROOT,LINK)
-                            BUMP = pandb[1]
-                            ROOT = pandb[0]
-                            PBSDF.inputs['Specular'].default_value = 0.3
-                            if(len(PBSDF.inputs['Alpha'].links)>0):
-                                Versions.eevee_alpha(mat, 'BLEND', 0)
-                            for ca in cary:
-                                for ft in ftable:
-                                    if ft[0] == 'd':
-                                        continue
-                                    if ca[0].endswith(ft[0]):
-                                        SNTIMG = ROOT.new(type='ShaderNodeTexImage')
-                                        SNTIMG.name = Global.img_format(mat.name, ft[0])
-                                        img = bpy.data.images.load(filepath=ca[1])
-                                        SNTIMG.image = img
-                                        Versions.to_color_space_non(SNTIMG)
-                                        if ft[0]=='n':
-                                            if NORM is not None:
-                                                LINK.new(SNTIMG.outputs['Color'], NORM.inputs['Color'])
-                                        elif ft[0]=='b':
-                                            if BUMP is not None:
-                                                LINK.new(SNTIMG.outputs['Color'], BUMP.inputs['Height'])
-                                        else:
-                                            LINK.new(SNTIMG.outputs['Color'], PBSDF.inputs[ft[1]])
+                    for node in ROOT:
+                        for nidx,nm in enumerate(name4):
+                            if node.name.startswith(nm):
+                                count += 1
+                                if nidx==1:
+                                    source_adr = node.image.filepath
+                                    kigo = getTexKigo(node)
+                                    print(mat.name,"<<<<<<<<<<<<>>>>>>>>>>>>>>",kigo)
+                                    node.name = Global.img_format(mat.name,kigo)
+                                elif nidx==2:
+                                    PBSDF = node
+                                elif nidx==3:
+                                    NORM = node
+                    if source_adr!="":
+                        md = MatDct.MatDct()
+                        cary = md.cloth_dct_0(source_adr)
+                        pandb = insertBumpMap(ROOT,LINK)
+                        BUMP = pandb[1]
+                        ROOT = pandb[0]
+                        PBSDF.inputs['Specular'].default_value = 0.3
+                        if(len(PBSDF.inputs['Alpha'].links)>0):
+                            Versions.eevee_alpha(mat, 'BLEND', 0)
+                        for ca in cary:
+                            for ft in ftable:
+                                if ft[0] == 'd':
+                                    continue
+                                if ca[0].endswith(ft[0]):
+                                    SNTIMG = ROOT.new(type='ShaderNodeTexImage')
+                                    SNTIMG.name = Global.img_format(mat.name, ft[0])
+                                    img = bpy.data.images.load(filepath=ca[1])
+                                    SNTIMG.image = img
+                                    Versions.to_color_space_non(SNTIMG)
+                                    if ft[0]=='n':
+                                        if NORM is not None:
+                                            LINK.new(SNTIMG.outputs['Color'], NORM.inputs['Color'])
+                                    elif ft[0]=='b':
+                                        if BUMP is not None:
+                                            LINK.new(SNTIMG.outputs['Color'], BUMP.inputs['Height'])
+                                    else:
+                                        LINK.new(SNTIMG.outputs['Color'], PBSDF.inputs[ft[1]])
                     NodeArrange.toNodeArrange(ROOT)
 
 
@@ -943,4 +945,14 @@ def insertBumpMap(ROOT,LINK):
     rtn[0] = ROOT
     return rtn
 
-
+def getTexKigo(tex_node):
+    if len(tex_node.outputs)==0 or tex_node.outputs[0].is_linked==False:
+        return "x"
+    skt = tex_node.outputs[0].links[0].to_socket
+    print("SKT",skt.name)
+    for ft in ftable:
+        if skt.name=='Base Color' and ft[1]=='Diffuse':
+            return ft[0]
+        if skt.name==ft[1]:
+            return ft[0]
+    return "x"

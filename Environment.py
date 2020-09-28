@@ -418,10 +418,16 @@ class ReadFbx:
                     normal = None
                     ROOT = mat.node_tree.nodes
                     LINK = mat.node_tree.links
+                    bcolor_by_asc = ""
                     for node in ROOT:
                         if node.name=='Normal Map':
                             normal = node
                             break
+                        elif node.type=='TEX_IMAGE':
+                            kigo = DtbMaterial.getTexKigo(node)
+                            node.name = Global.img_format(mat.name,kigo)
+                            if kigo=='d' or kigo=='t':
+                                bcolor_by_asc = node.image.filepath
                     for mainNode in ROOT:
                         if mainNode.name=='Principled BSDF':
                             mainNode.inputs['Metallic'].default_value = 0.0
@@ -430,7 +436,7 @@ class ReadFbx:
                             root_bump = DtbMaterial.insertBumpMap(ROOT, LINK)
                             ROOT = root_bump[0]
                             bumpNode = root_bump[1]
-                            bcolor_by_asc = ""
+
                             for asc in self.asc_ary:
                                 if  (asc[1] == mat.name or mat.name.startswith(asc[1]+".00")):
                                     if asc[0] == 'M':
@@ -444,15 +450,21 @@ class ReadFbx:
                                             if kind=='Specular':
                                                 mainNode.inputs['Specular'].default_value = float(asc[6])
                                     elif asc[0]=='T':
-                                        bcolor_by_asc = asc[2]
-                            if mainNode.inputs.get('Base Color') is not None:
-                                lnks = mainNode.inputs['Base Color'].links
-                                for lnk in lnks:
-                                    node = lnk.from_node
-                                    if node.name.startswith('Image Texture'):
-                                        node.name = Global.img_format(mat.name,"d")
-                                        bcolor_by_asc = node.image.filepath
-                                        break
+                                        if bcolor_by_asc =="":
+                                            bcolor_by_asc = asc[2]
+
+                            # two_in = ['Base Color','Alpha']
+                            # targ = ['d','t']
+                            # for tidx,ti in enumerate(two_in):
+                            #     if mainNode.inputs.get(ti) is not None:
+                            #         lnks = mainNode.inputs[ti].links
+                            #         for lnk in lnks:
+                            #             node = lnk.from_node
+                            #             if node.name.startswith('Image Texture'):
+                            #                 node.name = Global.img_format(mat.name,targ[tidx])
+                            #                 if tidx==0:
+                            #                     bcolor_by_asc = node.image.filepath
+                            #                 break
                             if bcolor_by_asc !="":
                                 from . import MatDct
                                 mm = MatDct.MatDct()

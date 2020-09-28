@@ -33,7 +33,7 @@ class Octane:
         self.config()
         OctSkin2()
         for obj in Util.myacobjs():
-            print(obj.name)
+            #print(obj.name)
             self.execute(obj)
         Versions.make_camera()
 
@@ -87,6 +87,7 @@ class Octane:
             for nd in ROOT:
                 if nd.type=='TEX_IMAGE':
                     for ft in self.ftable:
+                        #print(obj.name,nd.name,mainNode.type)
                         if ('-IMG.' + ft[0] + "-") in nd.name:
                             adr = nd.image.filepath
                             OCTIMG = ROOT.new(type = 'ShaderNodeOctImageTex')
@@ -110,18 +111,18 @@ class Octane:
                                 pi = self.ftable[pidx][1]
                                 if flg_universe and pi=='Diffuse':
                                     pi = 'Albedo color'
-                                print(">>>>>>>>>>>>>>>>>>>>",mainNode,mainNode.inputs[pi],mainNode.inputs[pi],mainNode.inputs[pi].type,)
+                                #print(">>>>>>>>>>>>>>>>>>>>",mainNode,mainNode.inputs[pi],mainNode.inputs[pi],mainNode.inputs[pi].type,)
                                 mainNode.inputs[pi].default_value = dv
 
-            self.after_execute(ROOT,LINK,ttable,mainNode,mban>-1)
+            self.after_execute(ROOT,LINK,ttable,mainNode,mban>0)
             if mban>0:
                 toGroupInputsDefault(mban==7)
             NodeArrange.toNodeArrange(ROOT)
 
     def after_execute(self,ROOT,LINK,ttable,universe,flg_human):
-        afters = ['ShaderNodeOctRGBSpectrumTex','ShaderNodeValue',
+        afters = ['ShaderNodeOctRGBSpectrumTex','ShaderNodeOctIntValue',
                       'ShaderNodeOct2DTransform','ShaderNodeOctUVWProjection']
-        for aidx,af in enumerate(afters,flg_human):
+        for aidx,af in enumerate(afters):
             if flg_human==False and aidx<2:
                 continue
             n = ROOT.new(type=af)
@@ -131,7 +132,8 @@ class Octane:
                     LINK.new(n.outputs[0],ttable[1][1].inputs['Power'])
                 LINK.new(n.outputs[0], universe.inputs['Specular'])
             elif aidx==1:
-                n.outputs[0].default_value = 1
+
+                n.inputs[0].default_value = 1
                 for i in range(3):#d,b,n
                     if ttable[i][1] is not None:
                         LINK.new(n.outputs[0],ttable[i][1].inputs['Gamma'])
@@ -187,9 +189,9 @@ class OctSkin2:
             #Diffuse1
             [[0,0],[1,'Transmission']],
             # Diffuse2
-            [[0,1],[1,0]],
+            [[0,0],[1,0]],
             [[1,0],[4,1]],
-            [[0,1],[2,0]],
+            [[0,0],[2,0]],
             [[2,0],[4,2]],
 
             #Roughness
@@ -238,12 +240,12 @@ class OctSkin2:
             if sub is not None:
                 n.blend_type = sub
             self.shaders.append(n)
-            print(n.name)
+            #print(n.name)
             old_gname = gname
         for cidx,cn in enumerate(con_nums):
             outp = cn[0]
             inp = cn[1]
-            print(cidx, outp, inp)
+            #print(cidx, outp, inp)
             LINK.new(
                 self.shaders[outp[0]].outputs[outp[1]],
                 self.shaders[inp[0]].inputs[inp[1]]
