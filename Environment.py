@@ -6,6 +6,7 @@ from . import Global
 from . import Util
 from . import DtbMaterial
 from . import NodeArrange
+from . import Octane
 import re
 
 
@@ -80,6 +81,7 @@ class ReadFbx:
             pbar(int(i*one)+int(one/2))
             self.readAsc()
             self.setMaterial()
+            Octane.Octane()
         Global.scale_environment()
 
     def readFbx(self):
@@ -448,6 +450,7 @@ class ReadFbx:
                                 for lnk in lnks:
                                     node = lnk.from_node
                                     if node.name.startswith('Image Texture'):
+                                        node.name = Global.img_format(mat.name,"d")
                                         bcolor_by_asc = node.image.filepath
                                         break
                             if bcolor_by_asc !="":
@@ -458,6 +461,7 @@ class ReadFbx:
                                     SNTIMG = ROOT.new(type='ShaderNodeTexImage')
                                     img = bpy.data.images.load(filepath=t[1])
                                     SNTIMG.image = img
+                                    SNTIMG.name = Global.img_format(mat.name,t[0][len(t[0])-1:])
                                     Versions.to_color_space_non(SNTIMG)
 
                                     if t[0].endswith("-n"):
@@ -531,7 +535,7 @@ class ReadFbx:
                     obj.location[i] = float(pose[i+3]) + float(root_pose[i+3])
                     self.before_edit_prop()
                     obj.rotation_euler[i] = math.radians(float(pose[i+6]))
-                    obj.scale[i] = 100
+                    obj.scale[i] = 1
             for i in range(3):
                 obj.lock_location[i] = True
                 obj.lock_rotation[i] = True

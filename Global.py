@@ -89,7 +89,6 @@ def if_octane():
             bpy.context.scene.octane
             _OCTANE = 1
         except AttributeError as e:
-            print("octane_error",e)
             _OCTANE = -1
     return _OCTANE>0
 
@@ -613,7 +612,6 @@ def set_already_use_newmtl(newmtl):
 
 def is_already_use_newmtl(newmtl):
     is_in = (newmtl in already_use_newmtl)
-    print("@@@",is_in,newmtl,already_use_newmtl)
     return is_in
 
 def setHomeTown(htown):

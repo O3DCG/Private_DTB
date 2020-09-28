@@ -65,7 +65,6 @@ class IMP_OT_object(Operator, ImportHelper):
     def execute(self, context):
         dirname = os.path.dirname(self.filepath)
         for i, f in enumerate(self.files, 1):
-            print("f===",f)
             durPath = (os.path.join(dirname, f.name))
             from . import ToHighReso
             tgm = ToHighReso.get_Morph(durPath, get_obj_name)

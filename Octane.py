@@ -26,16 +26,15 @@ class Octane:
 
     mtable = DtbMaterial.mtable
     def config(self):
-        bpy.context.scene.octane.ray_epsilon = 0.0000001
+        bpy.context.scene.octane.ray_epsilon = 0.000010
     def __init__(self):
         if Global.if_octane()==False:
             return
+        self.config()
         OctSkin2()
-        print("OctSkin2().finished")
         for obj in Util.myacobjs():
             print(obj.name)
             self.execute(obj)
-
         Versions.make_camera()
 
     def eye_wet(self,ROOT,LINK):
@@ -52,7 +51,6 @@ class Octane:
         for slot in obj.material_slots:
             ttable = [
                 ["d", None],
-                ["d2", None],
                 ["b",None],
                 ["n", None],
                 ["s", None],
@@ -76,15 +74,15 @@ class Octane:
                 self.eye_wet(ROOT,LINK)
                 continue
             if mban==7:
-                universe = ROOT.new(type='ShaderNodeOctGlossyMat')
+                mainNode = ROOT.new(type='ShaderNodeOctGlossyMat')
 
             elif mban<=0:
-                universe = ROOT.new(type='ShaderNodeOctUniversalMat')
+                mainNode = ROOT.new(type='ShaderNodeOctUniversalMat')
                 flg_universe = True
             else:
-                universe = ROOT.new(type='ShaderNodeGroup')
-                universe.node_tree = bpy.data.node_groups[oct_ngroup3(SKIN)]
-            LINK.new(universe.outputs['OutMat'], outmat.inputs['Surface'])
+                mainNode = ROOT.new(type='ShaderNodeGroup')
+                mainNode.node_tree = bpy.data.node_groups[oct_ngroup3(SKIN)]
+            LINK.new(mainNode.outputs['OutMat'], outmat.inputs['Surface'])
             outmat.target = 'octane'
             for nd in ROOT:
                 if nd.type=='TEX_IMAGE':
@@ -98,24 +96,34 @@ class Octane:
                             inputname = ft[1]
                             if flg_universe and inputname=='Diffuse':
                                 inputname = 'Albedo color'
-                            LINK.new(universe.inputs[inputname],OCTIMG.outputs['OutTex'])
+                            LINK.new(mainNode.inputs[inputname],OCTIMG.outputs['OutTex'])
                             for tt in ttable:
                                 if tt[0]==ft[0]:
                                     tt[1] = OCTIMG
-                                    if tt[0]=='d':
-                                        ttable[1][1] = OCTIMG
                                     break
-                            if inputname=='Diffuse' and mban !=7 and flg_universe==False:
-                                LINK.new(universe.inputs[ft[1]+"2"], OCTIMG.outputs['OutTex'])
-            self.after_execute(ROOT,LINK,ttable,universe)
-            toGroupInputsDefault(mban==7)
-            NodeArrange.toNodeArrange(ROOT)
-    def after_execute(self,ROOT,LINK,ttable,universe):
-        afters = ['ShaderNodeOctRGBSpectrumTex','ShaderNodeValue','ShaderNodeValue',#'''ShaderNodeOctFloatVertexTex','ShaderNodeOctFloatVertexTex'
-                      'ShaderNodeOct2DTransform','ShaderNodeOctUVWProjection']
+                elif nd.type=='BSDF_PRINCIPLED':
+                    p_inp = ["Diffuse", "", "Specular","Roughness", "", "", "Alpha"]
+                    for pidx,pi in enumerate(p_inp):
+                        if pi!="" and nd.inputs.get(pi) is not None:
+                            if nd.inputs.get(pi).type=='VALUE' and len(nd.inputs.get(pi).links)==0:
+                                dv = nd.inputs.get(pi).default_value
+                                pi = self.ftable[pidx][1]
+                                if flg_universe and pi=='Diffuse':
+                                    pi = 'Albedo color'
+                                print(">>>>>>>>>>>>>>>>>>>>",mainNode,mainNode.inputs[pi],mainNode.inputs[pi],mainNode.inputs[pi].type,)
+                                mainNode.inputs[pi].default_value = dv
 
-        for aidx,af in enumerate(afters):
-            print(aidx,af)
+            self.after_execute(ROOT,LINK,ttable,mainNode,mban>-1)
+            if mban>0:
+                toGroupInputsDefault(mban==7)
+            NodeArrange.toNodeArrange(ROOT)
+
+    def after_execute(self,ROOT,LINK,ttable,universe,flg_human):
+        afters = ['ShaderNodeOctRGBSpectrumTex','ShaderNodeValue',
+                      'ShaderNodeOct2DTransform','ShaderNodeOctUVWProjection']
+        for aidx,af in enumerate(afters,flg_human):
+            if flg_human==False and aidx<2:
+                continue
             n = ROOT.new(type=af)
             if aidx==0:
                 n.inputs[0].default_value = (1.0,1.0,1.0,1.0)
@@ -123,22 +131,14 @@ class Octane:
                     LINK.new(n.outputs[0],ttable[1][1].inputs['Power'])
                 LINK.new(n.outputs[0], universe.inputs['Specular'])
             elif aidx==1:
-                n.outputs[0].default_value = 1.0
-                for i in range(4):
+                n.outputs[0].default_value = 1
+                for i in range(3):#d,b,n
                     if ttable[i][1] is not None:
                         LINK.new(n.outputs[0],ttable[i][1].inputs['Gamma'])
-                #if ttable[2][1] is not None:
-                #    LINK.new(n.outputs[0], ttable[2][1].inputs['Gamma'])
-            elif aidx==20:
-                n.outputs[0].default_value = 2.2
-                if ttable[1][1] is not None:
-                    LINK.new(n.outputs[0], ttable[1][1].inputs['Gamma'])
-                if ttable[6][1] is not None:
-                    LINK.new(n.outputs[0], ttable[6][1].inputs['Gamma'])
-            elif aidx==3 or aidx==4:
+            else:
                 for tt in ttable:
                     if tt[1] is not None:
-                        if aidx==3:
+                        if aidx==2:
                             arg = 'Transform'
                         else:
                             arg = 'Projection'
@@ -172,7 +172,6 @@ class OctSkin2:
         self.oct_skin.inputs.new(nsc, 'Bump')
         self.oct_skin.inputs.new(nsc, 'Normal')
         self.oct_skin.inputs.new(nsc, 'Opacity')
-
         self.oct_skin.outputs.new('NodeSocketShader', 'OutMat')
         self.oct_skin.outputs.new('NodeSocketVector', 'Displacement')
     def adjust_default(self):
@@ -249,9 +248,7 @@ class OctSkin2:
                 self.shaders[outp[0]].outputs[outp[1]],
                 self.shaders[inp[0]].inputs[inp[1]]
             )
-        print("finished_skinnode")
-        #NodeArrange.toNodeArrange(self.oct_skin.nodes)
-        print("finished_skinnode2")
+        NodeArrange.toNodeArrange(self.oct_skin.nodes)
 
 def getGroupNode(key):
     for slot in Global.getBody().material_slots:
@@ -262,6 +259,8 @@ def getGroupNode(key):
                     return n
 
 def toGroupInputsDefault(flg_eye):
+    if Global.getBody() is None:
+        return;
     k3 = [EDRY, EWET, SKIN]
     for kidx, k in enumerate(k3):
         dist_n = getGroupNode(ngroup3(k))
@@ -272,7 +271,6 @@ def toGroupInputsDefault(flg_eye):
                 continue
             n = None
             for sch_n in mat.node_tree.nodes:
-                print("===========", sch_n.name, sch_n.type)
                 if sch_n.type!='GROUP':
                     continue
                 if ('Output' in sch_n.name) or ('Input' in sch_n.name):
@@ -410,4 +408,3 @@ class OctSkin:
             )
         NodeArrange.toNodeArrange(self.mcy_skin.nodes)
 
-#console:"C:\Program Files\BlenderOctane\blender.exe"

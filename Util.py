@@ -221,7 +221,6 @@ def get_parent_name(col_name):
         for coll in traverse_tree(bpy.context.scene.collection):
             for c in coll.children.keys():
                 coll_parents.setdefault(c, coll.name)
-    print("coll_parents.length()=",len(coll_parents))
     return coll_parents.get(col_name)
 
 def getActiveCollection():
@@ -441,12 +440,6 @@ class Posing:
         Versions.active_object(Global.getAmtr())
         Global.setOpsMode("POSE")
         hometown = Global.getHomeTown()
-        # idx = -1
-        # print("hometown = ",hometown)
-        # if len(hometown)>3 and hometown.startswith("FIG"):
-        #     idx = int(hometown[3:])
-        # if idx<0:
-        #     return
         padr = hometown+ "/FIG.csv"
         if os.path.exists(padr) == False:
             return
