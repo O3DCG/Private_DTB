@@ -182,7 +182,7 @@ class DTB_PT_Main(bpy.types.Panel):
                         l.prop(w_mgr, "br_onoff_prop", text="Joint Range", toggle=True)
                 l.separator()
                 l.operator('my.clear')
-            if Global.amIBody(context.object):
+            if Global.amIBody(context.object) and bpy.context.scene.render.engine !='octane':
                 col = l.column(align=True)
                 box = col.box()
                 row = box.row(align=True)

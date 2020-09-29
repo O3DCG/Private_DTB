@@ -49,6 +49,7 @@ ftable = [["d","Diffuse"],
           ["z","Subsurface"],
           ["n","Normal"],
           ["t","Alpha"]]
+
 class DtbShaders:
     dct ={}
     evaluate = -1
@@ -64,6 +65,24 @@ class DtbShaders:
         pass
 
     def eyelash(self,ROOT,LINK,cyclesOUT,eeveeOUT,mname):
+        adr = ""
+        main = ROOT.new(type='ShaderNodeBsdfPrincipled')
+        main.inputs['Base Color'].default_value = (0.1, 0.1, 0.1, 1)
+        main.inputs['Roughness'].default_value = 0.3
+        if "0t" in self.dct.keys():
+            adr = self.dct["0t"]
+        if os.path.exists(adr) == False:
+            main.inputs['Alpha'].default_value = 0.0
+            return
+        SNTIMG = ROOT.new(type='ShaderNodeTexImage')
+        SNTIMG.name = Global.img_format(mname ,"t")
+        img = bpy.data.images.load(filepath=adr)
+        SNTIMG.image = img
+        LINK.new(main.inputs['Alpha'],SNTIMG.outputs['Color'])
+        LINK.new(main.outputs['BSDF'], cyclesOUT.inputs[0])
+        LINK.new(main.outputs['BSDF'], eeveeOUT.inputs[0])
+
+    def eyelash_OLD(self,ROOT,LINK,cyclesOUT,eeveeOUT,mname):
         adr = ""
         ALF = ROOT.new(type='ShaderNodeBsdfTransparent')
         if "0t" in self.dct.keys():
@@ -216,7 +235,6 @@ class DtbShaders:
                                 if nidx==1:
                                     source_adr = node.image.filepath
                                     kigo = getTexKigo(node)
-                                    print(mat.name,"<<<<<<<<<<<<>>>>>>>>>>>>>>",kigo)
                                     node.name = Global.img_format(mat.name,kigo)
                                 elif nidx==2:
                                     PBSDF = node
@@ -251,7 +269,6 @@ class DtbShaders:
                                         LINK.new(SNTIMG.outputs['Color'], PBSDF.inputs[ft[1]])
                     NodeArrange.toNodeArrange(ROOT)
 
-
 def getGroupNode(key):
     for slot in Global.getBody().material_slots:
         ROOT = bpy.data.materials[slot.name].node_tree.nodes
@@ -282,8 +299,6 @@ def adjust_material(kind,inc_value,isEye):
     ['Bump.Strength', 6, 0],
     ['Bump.Distance', 6, 1],
     ['Displacement.Height',4,2],#14
-    #['Subsurface.Scale', 2, 2],
-    #['Subsurface.Scale', 2, 1],
     ]
     eyecombi = [
         ['Base Color.Bright', 1, 1],
@@ -320,10 +335,7 @@ def adjust_material(kind,inc_value,isEye):
                     cg = cg * 2#0.5
                 elif tidx==16:
                     cg = cg * 0.2
-                # elif tidx==14:
-                #     cg = cg * 12
-                # elif tidx>=11 or tidx<=13:
-                #     cg = cg * 8
+
             cg = cg * inc_value
             if tidx==15:
                 dv[0] += cg * 10
@@ -338,8 +350,6 @@ def getNidx(idx,nodes):
         if n.name.endswith("-" + str(idx)):
             return nidx
     return idx
-
-
 
 def toGroupInputsDefault(flg_eye):
     k3 = [EDRY, EWET, SKIN]
@@ -380,10 +390,8 @@ def toGroupInputsDefault(flg_eye):
                     values = [(0.067,0.378,0.752,1.0),0.5,(0.5,0.5,0.5,1.0),0.5, (0.45,0.45,0.45,1),  #0
                               0.01*Global.getSize(),(0.067,0.661,0.766,1.0),0.7,0.15,(0.984,0.072,0.072,1.0), #5 Scale~
                               0.3,0.5,(0.5,0.5,0.5,1.0),(0.5, 0.5, 1, 1),(0.2,0.2,0.2,1.0), #10 SSS2 Weight~
-
                               ]
                     inp.default_value = values[i]
-
 
 def toEyeDryDefault(ntree):
     if ntree is None:
@@ -445,7 +453,6 @@ def toEyeWetDefault(ntree):
                 nodes[dv0].inputs[dv[1]].default_value[i] = dv[2][i]
     NodeArrange.toNodeArrange(ntree.nodes)
 
-
 def toSkinDefault(ntree):
     if ntree is None:
         return
@@ -462,7 +469,7 @@ def toSkinDefault(ntree):
            [14, 1, Global.getSize()*0.030],  # RedSSS
            [8, 1, 0.0],
            [9, 1, 0.0],
-           [10, 1, -0.5],
+           [10, 1, 0.0],
            [8, 2, 0.0],
            [9, 2, 0.0],
            [10, 2, 0.0],
@@ -473,7 +480,7 @@ def toSkinDefault(ntree):
            [2, 'Transmission', 0.0],
            [2, 'Alpha', 1.0],
            [4, 2, Global.getSize()*0.0012],#Displacement Height
-           [4, 1, Global.getSize()*0.005],#Displacement Middle
+           [4, 1, 0.5],#Displacement Middle
            [13, 4, 0.0],#SSS node1 texture blur
            [14, 4, 0.5],#SSS node2 texture blur
            [11,0,0.5],
@@ -570,8 +577,6 @@ class McyEyeWet:
         connect_group(con_nums, self.mcy_eyewet, self.shaders, generatenames)
 gio4 = ['NodeSocketColor', 'NodeSocketFloat', 'NodeSocketVector', 'NodeSocketShader']
 
-
-
 def connect_group(con_nums,ngroup,shaders,generatenames):
     ROOT = ngroup.nodes
     LINK = ngroup.links
@@ -605,7 +610,6 @@ def connect_group(con_nums,ngroup,shaders,generatenames):
     for cidx, cn in enumerate(con_nums):
         outp = cn[0]
         inp = cn[1]
-
         LINK.new(
             shaders[outp[0]].outputs[outp[1]],
             shaders[inp[0]].inputs[inp[1]]
@@ -615,11 +619,13 @@ def connect_group(con_nums,ngroup,shaders,generatenames):
 class McyFresnel:
     shaders = []
     mcy_fresnel = None
+
     def __init__(self):
         self.shaders = []
         self.mcy_fresnel = None
         self.makegroup()
         self.exe_fresnel()
+
     def makegroup(self):
         self.mcy_fresnel = bpy.data.node_groups.new(type="ShaderNodeTree", name=ngroup2(FRESNEL))
         self.mcy_fresnel.inputs.new(gio4[1], 'IOR')
@@ -647,19 +653,15 @@ class McyFresnel:
             [[9, 0], [10, 1]],
             [[10,0],[7,0]],
             [[7,0],[1,0]],
-
             #Spec
             [[0, 1], [7, 1]],
             [[0, 2], [7, 2]],
-
             #Gloss
             [[0,3],[6,0]],
             [[6,0],[4,1]],
-
             #Bump
             [[0,4],[2,'Normal']],
             [[2,0],[6,1]],
-
             #Geometry
             [[3,'Incoming'],[6,2]],
             [[3, 'Incoming'], [5, 1]],
@@ -699,7 +701,6 @@ class McyMicro:
         self.shaders[1].inputs[1].default_value = (1.0, 1.0, 1.0, 1.0)
         self.shaders[1].inputs[2].default_value = (0.0, 0.0, 0.0, 1.0)
 
-
 class McySkin:
     shaders = []
     mcy_skin = None
@@ -728,8 +729,6 @@ class McySkin:
         self.mcy_skin.inputs.new(gio4[0], 'Bump')             #12
         self.mcy_skin.inputs.new(gio4[0], 'Normal')            #13
         self.mcy_skin.inputs.new(gio4[0], 'Displacement')      #14
-
-
         self.mcy_skin.outputs.new(gio4[3], 'Cycles')
         self.mcy_skin.outputs.new(gio4[2], 'Displacement')
         self.mcy_skin.outputs.new(gio4[3], 'EEVEE')
@@ -742,7 +741,6 @@ class McySkin:
                           'ShaderNodeMixShader', '','','',                                    #16
                         'ShaderNodeMixRGB.OVERLAY','ShaderNodeMixRGB.OVERLAY', 'ShaderNodeAddShader','',#20
                         'mcy_MicroRough_PBR' ,  #24
-
                          ]           #16
         con_nums = [#Diffuse
                     [[0,0],[8,0]],
@@ -752,7 +750,6 @@ class McySkin:
                     #[[11, 0], [2, 3]],
                     [[11, 0], [20, 1]],#to MixRgbOVERLAY
                     [[11, 0], [21, 1]],
-
                     #SSS1
                     [[0, 6], [20, 2]],
                     [[20, 0], [13, 0]],
@@ -761,7 +758,6 @@ class McySkin:
                     [[0,7],[16,0]],
                     #SSS1 Radius
                     [[0,8],[13,2]],
-
                     #SSS2
                     [[0, 9], [21, 2]],
                     [[21,0],[14,0]],
@@ -770,25 +766,21 @@ class McySkin:
                     [[0,10],[17,0]],
                     #SSS2 Radius
                     [[0,11],[14,2]],
-
                     #MIX
                     [[16,0],[22,0]],
                     [[17, 0], [22, 1]],
                     [[22,0],[18,1]],        #add to mix
                     [[0,1],[18,0]],
                     [[18,0],[19,1]],
-
                     #Fresnel
                     [[7,0],[19,0]],
                     [[7,0],[12,0]],
                     [[19,0],[23,0]],# mix to add
                     [[23,0],[1,0]],
                      [[23, 0], [1, 2]],
-
                     # Normal
                     [[0, 13], [5, 'Color']],
                     [[5, 0], [6, 'Normal']],
-
                     # Bump
                     [[0, 12], [6, 'Height']],
                     [[6, 0], [13, 'Normal']],
@@ -797,19 +789,14 @@ class McySkin:
                     [[6, 0], [12, 'Normal']],
                     [[6, 0], [7, 'Normal']],
                     [[6, 0], [24, 'Normal']],
-
                     #Specular
                     [[0,2],[9,0]],
                     [[9,0],[2,"Specular"]],
-
                     #Gloss
                     [[12,0],[23,1]],       #!!!!
-
                     #Roughness
                     [[0,4],[10,0]],
                     [[10,0],[2,'Roughness']],
-
-
                     #mcy_micro
                     [[3,0],[24,'Roughness']],
                     [[24,0],[7,'Gloss']],
@@ -820,10 +807,10 @@ class McySkin:
                     #Displacement
                     [[0,12],[4,0]],
                     [[4,0],[1,1]],
-
             ]
         connect_group(con_nums, self.mcy_skin, self.shaders, generatenames)
         self.shaders[3].outputs[0].default_value = 0.5
+
 def forbitMinus():
     pbsdf = 'Principled BSDF'
     for dobj in Util.myccobjs():

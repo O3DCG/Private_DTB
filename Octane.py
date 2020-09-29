@@ -22,18 +22,16 @@ class Octane:
               ["z", "Medium"],
               ["n", "Normal"],
               ["t", "Opacity"]]
-
-
     mtable = DtbMaterial.mtable
+
     def config(self):
         bpy.context.scene.octane.ray_epsilon = 0.000010
     def __init__(self):
         if Global.if_octane()==False:
             return
         self.config()
-        OctSkin2()
+        OctSkin()
         for obj in Util.myacobjs():
-            #print(obj.name)
             self.execute(obj)
         Versions.make_camera()
 
@@ -87,7 +85,6 @@ class Octane:
             for nd in ROOT:
                 if nd.type=='TEX_IMAGE':
                     for ft in self.ftable:
-                        #print(obj.name,nd.name,mainNode.type)
                         if ('-IMG.' + ft[0] + "-") in nd.name:
                             adr = nd.image.filepath
                             OCTIMG = ROOT.new(type = 'ShaderNodeOctImageTex')
@@ -103,17 +100,22 @@ class Octane:
                                     tt[1] = OCTIMG
                                     break
                 elif nd.type=='BSDF_PRINCIPLED':
-                    p_inp = ["Diffuse", "", "Specular","Roughness", "", "", "Alpha"]
+                    p_inp = ["Base Color", "", "Specular","Roughness", "", "", "Alpha"]
                     for pidx,pi in enumerate(p_inp):
-                        if pi!="" and nd.inputs.get(pi) is not None:
-                            if nd.inputs.get(pi).type=='VALUE' and len(nd.inputs.get(pi).links)==0:
-                                dv = nd.inputs.get(pi).default_value
-                                pi = self.ftable[pidx][1]
-                                if flg_universe and pi=='Diffuse':
-                                    pi = 'Albedo color'
-                                #print(">>>>>>>>>>>>>>>>>>>>",mainNode,mainNode.inputs[pi],mainNode.inputs[pi],mainNode.inputs[pi].type,)
-                                mainNode.inputs[pi].default_value = dv
+                        if pi != "" and nd.inputs.get(pi) is not None:
 
+                            if len(nd.inputs.get(pi).links)==0:
+                                dv = nd.inputs.get(pi).default_value
+
+                                pi = self.ftable[pidx][1]
+                                if pidx==0:
+                                    if flg_universe:
+                                        pi = 'Albedo color'
+                                    else:
+                                        pi = 'Diffuse'
+                                intype = mainNode.inputs[pi].type
+                                if intype == 'VALUE' or intype=='RGBA':
+                                    mainNode.inputs[pi].default_value = dv
             self.after_execute(ROOT,LINK,ttable,mainNode,mban>0)
             if mban>0:
                 toGroupInputsDefault(mban==7)
@@ -145,7 +147,6 @@ class Octane:
                         else:
                             arg = 'Projection'
                         LINK.new(n.outputs[0],tt[1].inputs[arg])
-
 
 NGROUP3 = ['oct_skin','oct_eyewet','oct_eyedry']
 SKIN = 0
@@ -327,8 +328,8 @@ class OctSkin:
     def makegroup(self):
         self.mcy_skin = bpy.data.node_groups.new(type="ShaderNodeTree", name=oct_ngroup3(SKIN))
         nsc = 'NodeSocketColor'
-        self.mcy_skin.inputs.new(nsc, 'Albedo color')
-        #self.mcy_skin.inputs.new(nsc, 'Diffuse')
+        #self.mcy_skin.inputs.new(nsc, 'Albedo color')
+        self.mcy_skin.inputs.new(nsc, 'Diffuse')
         self.mcy_skin.inputs.new(nsc, 'Specular')
         self.mcy_skin.inputs.new(nsc, 'Roughness')
         self.mcy_skin.inputs.new(nsc, 'Bump')

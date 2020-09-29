@@ -424,9 +424,8 @@ class ReadFbx:
                             normal = node
                         elif node.type=='TEX_IMAGE':
                             kigo = DtbMaterial.getTexKigo(node)
-                            print("ENVENVENV",mat.name,kigo)
                             node.name = Global.img_format(mat.name,kigo)
-                            if kigo=='d' or kigo=='t':
+                            if kigo=='d':
                                 bcolor_by_asc = node.image.filepath
                     for mainNode in ROOT:
                         if mainNode.name=='Principled BSDF':
