@@ -237,6 +237,11 @@ class IMP_OT_FBX(bpy.types.Operator):
         Global.setRenderSetting(Global.getIsPro())
 
     def layGround(self):
+        wm = bpy.context.window_manager
+        wk = bpy.context.window_manager.search_prop
+        wk = wk.replace(" ","")
+        wk = wk.lower()
+        bpy.context.window_manager.search_prop = wk
         bpy.context.preferences.inputs.use_mouse_depth_navigate = True
         Util.deleteEmptyDazCollection()
         bpy.context.scene.render.engine = 'CYCLES'
@@ -383,9 +388,13 @@ class IMP_OT_FBX(bpy.types.Operator):
             bpy.ops.import_scene.fbx(filepath=filepath)
             bpy.context.space_data.shading.type = 'SOLID'
             bpy.context.space_data.shading.color_type = 'TEXTURE'
-        for b in Util.myacobjs():
-            for i in range(3):
-                b.scale[i] = 0.01
+        if Global.want_real():
+            for b in Util.myacobjs():
+                for i in range(3):
+                    b.scale[i] = 0.01
+            Global.my_region_3d(1)
+        else:
+            Global.my_region_3d(0)
 
 class MATERIAL_OT_up(bpy.types.Operator):
     bl_idname = "material.up"

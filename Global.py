@@ -77,8 +77,13 @@ def isAcs():
     wk = bpy.context.window_manager.search_prop
     wk = wk.strip()
     wk = wk.lower()
-    return wk=='#accessory'
+    return ('#accessory' in wk)
 
+def isDazOctane():
+    wk = bpy.context.window_manager.search_prop
+    wk = wk.strip()
+    wk = wk.lower()
+    return ('#dazoctane' in wk)
 def img_format(mname,kind):
     return mname + "-IMG." + kind + "-"
 
@@ -980,6 +985,13 @@ def scale_environment():
     size_1_100 =  [[(0.2721, -0.2184, 0.9022),(-0.7137, -0.5870, -0.2612,-0.2790),3],
                    [(7.15, -4.35, 100.0),(-0.7150, -0.5860, -0.2601, -0.2788) ,430]]
     idx = 0 if getSize()==1 else 1
+    my_region_3d(idx)
+    bpy.context.preferences.inputs.use_mouse_depth_navigate = True
+    normal_and_bump_to_size()
+
+def my_region_3d(idx):
+    size_1_100 = [[(0.2721, -0.2184, 0.9022), (-0.7137, -0.5870, -0.2612, -0.2790), 3],
+                  [(7.15, -4.35, 100.0), (-0.7150, -0.5860, -0.2601, -0.2788), 430]]
     for area in bpy.context.screen.areas:
         if area.type == "VIEW_3D":
             rv3d = area.spaces[0].region_3d
@@ -988,9 +1000,6 @@ def scale_environment():
                 rv3d.view_rotation = size_1_100[idx][1]
                 rv3d.view_distance = size_1_100[idx][2]
                 rv3d.view_camera_zoom = 0
-    bpy.context.preferences.inputs.use_mouse_depth_navigate = True
-    normal_and_bump_to_size()
-
 def normal_and_bump_to_size():
     objs = Util.myacobjs()
     for obj in objs:

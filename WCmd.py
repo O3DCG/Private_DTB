@@ -108,7 +108,7 @@ class Command:
     def __init__(self,key,context):
         key = Global.orthopedic_sharp(key)
         Util.active_object_to_current_collection()
-        not_erace = ['getpose', 'accessory']
+        not_erace = ['getpose', 'accessory','dazoctane']
         kwd = ['getface', 'getbody', 'gethand', 'rentface', 'rentbody', 'renthand', "getleg", "rentleg"]
         flg_morph = False
         for kw in kwd:
