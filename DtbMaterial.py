@@ -844,12 +844,15 @@ def readImages(dct):
         LINK = bpy.data.materials[slot.name].node_tree.links
         SNBP = None
         for n in ROOT:
-            if n.name.startswith('Group') == False:
+            if n.type!='GROUP':
+                continue
+            if n.node_tree.name.startswith("mcy")==False:
                 continue
             SNBP = n
             break
         if SNBP is None:
             continue
+
         for midx in range(len(mtable)):
             mname = mtable[midx][0]
             mban = mtable[midx][1]
@@ -871,7 +874,7 @@ def readImages(dct):
                         SNTIMG = ROOT.new(type='ShaderNodeTexImage')
                         LINK.new(SNTIMG.outputs[0],inp)
                     for link in inp.links:
-                        if link.from_node.name.startswith("Image Texture"):
+                        if link.from_node.type=='TEX_IMAGE':
                             SNTIMG = link.from_node
                             img = bpy.data.images.load(filepath=adr)
                             SNTIMG.image = img

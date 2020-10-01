@@ -320,8 +320,8 @@ class MatDct:
                                     if rtn !=[]:
                                         return rtn
                 else:
-                    if len(c_name) >= 12:
-                        c_name = c_name[:(len(c_name) // 2) - 2]
+                    if len(c_name) >= 10:
+                        c_name = c_name[:(len(c_name) // 2)]
                     elif len(c_name) >= 8:
                         c_name = c_name[:3]
                     else:
