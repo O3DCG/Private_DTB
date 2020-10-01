@@ -46,11 +46,10 @@ class MatDct:
     ["bump", "bmp.", "b"],
     ["bump", "disp.", "b"],
     ["bump","MapB01","b"],
-    ["specu","specc.","s"],
+    ["Spec","specc.","s"],
     ["specu", "spec.", "s"],
     ["specu", "MapS", "s"],
     ["specu", "Maps", "s"],
-    ["sss","sss","z"],
     ["normal","nm","n"],
     ["rough","rough","r"],
     ["trans","tr","t"],
@@ -58,14 +57,14 @@ class MatDct:
     ["diff","D","d"],
     ["bump","B","b"],
     ["specu","S","s"],
-    ["sss","sss","z"],
     ["normal","NM","n"],
     ["normal", "nml.", "n"],
     ["normal","Nm","n"],
     ["rough","R","r"],
     ["trans","TR","t"],
     ["trans","Tr","t"],
-    ["Alpha","alpha","t"]
+    ["Alpha","alpha","t"],
+    ["sss", "sss", "z"]
     ]
     evaluate = -1
 

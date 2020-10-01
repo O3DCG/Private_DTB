@@ -26,12 +26,13 @@ class Octane:
 
     def config(self):
         bpy.context.scene.octane.ray_epsilon = 0.000010
+
     def __init__(self):
         if Global.if_octane()==False:
             return
         self.config()
         if Global.isDazOctane():
-            OctSkin2()
+            OctSkin_daz()
         else:
             OctSkin()
         for obj in Util.myacobjs():
@@ -40,13 +41,13 @@ class Octane:
 
     def eye_wet(self,ROOT,LINK):
         main = ROOT.new(type = 'ShaderNodeOctSpecularMat')
-        main.inputs['Opacity'].default_value = 0.25
+        main.inputs['Opacity'].default_value = 0.2
+        main.inputs['Roughness'].default_value = 0.2
         main.inputs['Reflection'].default_value = (1.0, 1.0, 1.0, 1.0)
         main.inputs['Transmission Color'].default_value = (1.0, 1.0, 1.0, 1.0)
         out = ROOT.new(type = 'ShaderNodeOutputMaterial')
         out.target = 'octane'
         LINK.new(main.outputs[0],out.inputs[0])
-
 
     def execute(self,obj):
         for slot in obj.material_slots:
@@ -66,7 +67,6 @@ class Octane:
                 if mat.name.startswith("drb_" + mt[0]):
                     mban = mt[1]
                     break
-
             ROOT = mat.node_tree.nodes
             LINK = mat.node_tree.links
             flg_universe = False
@@ -76,7 +76,6 @@ class Octane:
                 continue
             if mban==7:
                 mainNode = ROOT.new(type='ShaderNodeOctGlossyMat')
-
             elif mban<=0:
                 mainNode = ROOT.new(type='ShaderNodeOctUniversalMat')
                 flg_universe = True
@@ -125,19 +124,13 @@ class Octane:
             NodeArrange.toNodeArrange(ROOT)
 
     def after_execute(self,ROOT,LINK,ttable,universe,flg_human):
-        afters = ['ShaderNodeOctRGBSpectrumTex','ShaderNodeOctIntValue',
+        afters = ['ShaderNodeOctIntValue',
                       'ShaderNodeOct2DTransform','ShaderNodeOctUVWProjection']
         for aidx,af in enumerate(afters):
             if flg_human==False and aidx<2:
                 continue
             n = ROOT.new(type=af)
             if aidx==0:
-                n.inputs[0].default_value = (1.0,1.0,1.0,1.0)
-                if ttable[1][1] is not None:
-                    LINK.new(n.outputs[0],ttable[1][1].inputs['Power'])
-                LINK.new(n.outputs[0], universe.inputs['Specular'])
-            elif aidx==1:
-
                 n.inputs[0].default_value = 1
                 for i in range(3):#d,b,n
                     if ttable[i][1] is not None:
@@ -145,11 +138,14 @@ class Octane:
             else:
                 for tt in ttable:
                     if tt[1] is not None:
-                        if aidx==2:
+                        if aidx==1:
                             arg = 'Transform'
                         else:
                             arg = 'Projection'
                         LINK.new(n.outputs[0],tt[1].inputs[arg])
+        for tidx,tt in enumerate(ttable):
+            if (tidx==1 or tidx==2) and tt[1] is not None:
+                tt[1].inputs['Power'].default_value = 0.4
 
 NGROUP3 = ['oct_skin','oct_eyewet','oct_eyedry']
 SKIN = 0
@@ -159,27 +155,28 @@ EDRY = 2
 def oct_ngroup3(idx):
     return NGROUP3[idx] + Util.get_dzidx()
 
-class OctSkin2:
+class OctSkin_daz:
     shaders = []
     oct_skin = None
+
     def __init__(self):
         self.shaders = []
         self.oct_skin = None
         self.makegroup()
         self.exeSkin()
         self.adjust_default()
+
     def makegroup(self):
         self.oct_skin = bpy.data.node_groups.new(type="ShaderNodeTree", name=oct_ngroup3(SKIN))
         nsc = 'NodeSocketColor'
         self.oct_skin.inputs.new(nsc, 'Diffuse')
-        self.oct_skin.inputs.new(nsc, 'Diffuse2')
         self.oct_skin.inputs.new(nsc, 'Specular')
         self.oct_skin.inputs.new(nsc, 'Roughness')
         self.oct_skin.inputs.new(nsc, 'Bump')
         self.oct_skin.inputs.new(nsc, 'Normal')
-        self.oct_skin.inputs.new(nsc, 'Opacity')
         self.oct_skin.outputs.new('NodeSocketShader', 'OutMat')
         self.oct_skin.outputs.new('NodeSocketVector', 'Displacement')
+
     def adjust_default(self):
         scat = self.shaders[3]
         scat.inputs['Absorption Tex'].default_value = (0.1255,0.51,0.55,1)
@@ -188,7 +185,6 @@ class OctSkin2:
     def exeSkin(self):
         generatenames = ['NodeGroupInput','ShaderNodeOctDiffuseMat','ShaderNodeOctGlossyMat','ShaderNodeOctScatteringMedium',
                          'ShaderNodeOctMixMat','ShaderNodeOctRoundEdges','ShaderNodeOctRGBSpectrumTex','NodeGroupOutput',]
-
         con_nums = [
             #Diffuse1
             [[0,0],[1,'Transmission']],
@@ -199,27 +195,27 @@ class OctSkin2:
             [[2,0],[4,2]],
 
             #Roughness
-            [[0, 3], [1, 1]],
-            [[0,3],[2,2]],
+            [[0, 2], [1, 1]],
+            [[0,2],[2,2]],
 
             #Specular
-            [[0,2],[2,1]],
+            [[0,1],[2,1]],
 
             #Normal
-            [[0,5],[2,'Normal']],
-            [[0, 5], [1, 'Normal']],
+            [[0,4],[2,'Normal']],
+            [[0, 4], [1, 'Normal']],
 
              #Scatter1
             [[3,0],[1,'Medium']],
 
-            #Alpha
-            [[0,6],[6,0]],
-            [[6, 0], [1, 'Opacity']],
-            [[6, 0], [2, 'Opacity']],
+            # #Alpha
+            # [[0,5],[6,0]],
+            # [[6, 0], [1, 'Opacity']],
+            # [[6, 0], [2, 'Opacity']],
 
             #Bump
-            [[0, 4], [2, 'Bump']],
-            [[0, 4], [1, 'Bump']],
+            [[0, 3], [2, 'Bump']],
+            [[0, 3], [1, 'Bump']],
 
             #RoundEdge
             [[5, 0], [2, 'Edges rounding']],
@@ -229,34 +225,6 @@ class OctSkin2:
             [[4, 0], [7, 0]],
         ]
         connect_group(con_nums, self.oct_skin, self.shaders, generatenames)
-
-        # ROOT = self.oct_skin.nodes
-        # LINK = self.oct_skin.links
-        # old_gname = ""
-        # for gidx,gname in enumerate(generatenames):
-        #     if gname=='':
-        #         gname = old_gname
-        #     a = gname.find('.')
-        #     sub = None
-        #     if a>0:
-        #         sub = gname[a+1:]
-        #         gname = gname[:a]
-        #     n = ROOT.new(type=gname)
-        #     n.name = gname + "-" + str(gidx)
-        #     if sub is not None:
-        #         n.blend_type = sub
-        #     self.shaders.append(n)
-        #     #print(n.name)
-        #     old_gname = gname
-        # for cidx,cn in enumerate(con_nums):
-        #     outp = cn[0]
-        #     inp = cn[1]
-        #     #print(cidx, outp, inp)
-        #     LINK.new(
-        #         self.shaders[outp[0]].outputs[outp[1]],
-        #         self.shaders[inp[0]].inputs[inp[1]]
-        #     )
-
 
 def getGroupNode(key):
     for slot in Global.getBody().material_slots:
@@ -269,58 +237,38 @@ def getGroupNode(key):
 def toGroupInputsDefault(flg_eye):
     if Global.getBody() is None:
         return;
-    k3 = [EDRY, EWET, SKIN]
-    for kidx, k in enumerate(k3):
-        dist_n = getGroupNode(ngroup3(k))
-        if dist_n is None:
+    dist_n = getGroupNode(ngroup3(SKIN))
+    if dist_n is None:
+        return
+    for mat in bpy.data.materials:
+        if mat.node_tree is None:
             continue
-        for mat in bpy.data.materials:
-            if mat.node_tree is None:
+        n = None
+        for sch_n in mat.node_tree.nodes:
+            if sch_n.type!='GROUP':
                 continue
-            n = None
-            for sch_n in mat.node_tree.nodes:
-                if sch_n.type!='GROUP':
-                    continue
-                if ('Output' in sch_n.name) or ('Input' in sch_n.name):
-                    continue
-                if sch_n.node_tree is None:
-                    continue
-                if sch_n.node_tree.name==dist_n.node_tree.name:
-                    n = sch_n
-                    break
-            if n is None:
+            if sch_n.node_tree is None:
                 continue
-            if flg_eye and ('eye' in sch_n.node_tree.name):
-                if ('dry' in sch_n.node_tree.name):
-                    for i, inp in enumerate(sch_n.inputs):
-                        if len(inp.links) > 0:
-                            continue
-                        if i == 2:
-                            inp.default_value = (0.5, 0.5, 1, 1)
-                        else:
-                            inp.default_value = (0.6, 0.6, 0.6, 1)
-                elif ('wet' in sch_n.node_tree.name):
-                    for i, inp in enumerate(sch_n.inputs):
-                        if len(inp.links) > 0:
-                            continue
-                        inp.default_value = (1.0,1.0,1.0,1.0)
-            elif ('skin' in sch_n.node_tree.name):
-                for i, inp in enumerate(sch_n.inputs):
-                    if len(inp.links) > 0:
-                        continue
-                    if i <2:
-                        inp.default_value = (0.7, 0.6, 0.5, 1)
-                    elif i < 5:
-                        inp.default_value = (0.6, 0.6, 0.6, 1)
-                    elif i == 5:
-                        inp.default_value = (0.5, 0.5, 1, 1)
-                    elif i == 6:
-                        inp.default_value = (1.0,1.0,1.0,1.0)
-
-                    mname = mat.name.lower()
-                    if ('mouth' in mname) or ('teeth' in mname) or ('nail' in mname):
-                        if i>1 and i < 5:
-                            inp.default_value = (0.8, 0.8, 0.8, 1)
+            if sch_n.node_tree.name==dist_n.node_tree.name:
+                n = sch_n
+                break
+        if n is None:
+            continue
+        for i, inp in enumerate(sch_n.inputs):
+            if len(inp.links) > 0:
+                continue
+            if i == 0:
+                inp.default_value = (0.7, 0.6, 0.5, 1)
+            elif i>0 and i<4:
+                inp.default_value = (0.6, 0.6, 0.6, 1)
+            elif i == 4:
+                inp.default_value = (0.5, 0.5, 1, 1)
+            mname = mat.name.lower()
+            if ('mouth' in mname) or ('teeth' in mname) or ('nail' in mname):
+                if i==1:
+                    inp.default_value = (0.7, 0.7, 0.7, 1)
+                elif i==2:
+                    inp.default_value = (0.4, 0.4, 0.4, 1)
 
 class OctSkin:
     shaders = []
@@ -330,27 +278,26 @@ class OctSkin:
         self.oct_skin = None
         self.makegroup()
         self.exeSkin()
+
     def makegroup(self):
         self.oct_skin = bpy.data.node_groups.new(type="ShaderNodeTree", name=oct_ngroup3(SKIN))
         nsc = 'NodeSocketColor'
-        #self.oct_skin.inputs.new(nsc, 'Albedo color')
         self.oct_skin.inputs.new(nsc, 'Diffuse')
         self.oct_skin.inputs.new(nsc, 'Specular')
         self.oct_skin.inputs.new(nsc, 'Roughness')
         self.oct_skin.inputs.new(nsc, 'Bump')
         self.oct_skin.inputs.new(nsc, 'Normal')
-        self.oct_skin.inputs.new(nsc, 'Displacement')
         self.oct_skin.outputs.new('NodeSocketShader', 'OutMat')
         self.oct_skin.outputs.new('NodeSocketShader', 'Displacement')
 
     def make_default(self):
         pass
+
     def exeSkin(self):
         generatenames = ['NodeGroupInput','ShaderNodeOctColorCorrectTex','','ShaderNodeOctDiffuseMat',#0
                          'ShaderNodeOctMixMat','','','ShaderNodeOctRGBSpectrumTex',#4
-                        'ShaderNodeOctScatteringMedium','','','ShaderNodeOctGlossyMat',  #8
-                         'ShaderNodeOctSpecularMat','','NodeGroupOutput','ShaderNodeOctDisplacementTex'] #12
-
+                        'ShaderNodeOctScatteringMedium','','NodeGroupOutput','ShaderNodeOctGlossyMat',  #8
+                         'ShaderNodeOctSpecularMat',''] #12
         con_nums = [
             #Diffuse
             [[0,0],[3,0]],
@@ -361,15 +308,11 @@ class OctSkin:
             [[0, 0], [12, 0]],
             [[0, 0], [13, 0]],
 
-
             # Scatter1
             [[8, 0], [12, 'Medium']],
 
             # Scatter2
             [[9, 0], [13, 'Medium']],
-
-            #Scatter3
-            #[[10,0],[3,'Medium']],
 
             #Specular1
             [[7,0],[2,0]],
@@ -384,60 +327,35 @@ class OctSkin:
             #Glossy
             [[0,'Diffuse'],[11,'Diffuse']],
             [[0, "Specular"], [11, "Specular"]],
-           # [[8,0],[11,'Medium']],
             [[0, "Roughness"], [11, "Roughness"]],
-            [[0, "Bump"], [11, "Bump"]],
-            [[0, "Normal"], [11, "Normal"]],
             [[11,0],[6,1]],
 
-              #out
-            [[6, 0], [14, 0]],
+            #bump and Normal
+            [[0, "Bump"], [12, "Bump"]],
+            [[0, "Bump"], [13, "Bump"]],
+            [[0, "Bump"], [3, "Bump"]],
+            [[0, "Normal"], [12, "Normal"]],
+            [[0, "Normal"], [13, "Normal"]],
+            [[0, "Normal"], [3, "Normal"]],
+            [[0, "Normal"], [11, "Normal"]],
+
+            #out
+            [[6, 0], [10, 0]],
         ]
         connect_group(con_nums, self.oct_skin, self.shaders, generatenames)
         self.shaders[7].inputs['Color'].default_value = (0.7, 0.095, 0.007, 1)
         self.shaders[9].inputs['Density'].default_value = 500
         self.shaders[9].inputs['Absorption Tex'].default_value = (0.477, 0.434, 0.086, 1)
         self.shaders[9].inputs['Scattering Tex'].default_value = (0.227, 0.248, 0.045, 1)
-
-
         self.shaders[8].inputs['Density'].default_value = 40
         self.shaders[8].inputs['Absorption Tex'].default_value = (0.251, 0.017, 0.0, 1)
         self.shaders[8].inputs['Scattering Tex'].default_value = (0.1, 0.003, 0.0, 1)
-
         for i in range(2):
             self.shaders[12+i].inputs['Roughness'].default_value = 0.2
             self.shaders[12+i].inputs[14].default_value = True
-
         self.shaders[1].inputs['Hue'].default_value = 0.2
         self.shaders[6].inputs[0].default_value = 0.2
         self.shaders[4].inputs[0].default_value = 0.6
-        #
-        # ROOT = self.oct_skin.nodes
-        # LINK = self.oct_skin.links
-        # old_gname = ""
-        # for gidx,gname in enumerate(generatenames):
-        #     if gname=='':
-        #         gname = old_gname
-        #     a = gname.find('.')
-        #     sub = None
-        #     if a>0:
-        #         sub = gname[a+1:]
-        #         gname = gname[:a]
-        #     n = ROOT.new(type=gname)
-        #     n.name = gname + "-" + str(gidx)
-        #     if sub is not None:
-        #         n.blend_type = sub
-        #     self.shaders.append(n)
-        #     old_gname = gname
-        # for cidx,cn in enumerate(con_nums):
-        #     outp = cn[0]
-        #     inp = cn[1]
-        #     LINK.new(
-        #         self.shaders[outp[0]].outputs[outp[1]],
-        #         self.shaders[inp[0]].inputs[inp[1]]
-        #     )
-
-
 
 def connect_group(con_nums,ngroup,shaders,generatenames):
     ROOT = ngroup.nodes

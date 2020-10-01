@@ -18,6 +18,8 @@ def ngroup3(idx):
 def ngroup2(idx):
     return NGROUP2[idx] + Util.get_dzidx()
 
+gio4 = ['NodeSocketColor', 'NodeSocketFloat', 'NodeSocketVector', 'NodeSocketShader']
+
 mtable = [
     ["Torso", 2],
     ["Face", 1],
@@ -81,35 +83,6 @@ class DtbShaders:
         LINK.new(main.inputs['Alpha'],SNTIMG.outputs['Color'])
         LINK.new(main.outputs['BSDF'], cyclesOUT.inputs[0])
         LINK.new(main.outputs['BSDF'], eeveeOUT.inputs[0])
-
-    def eyelash_OLD(self,ROOT,LINK,cyclesOUT,eeveeOUT,mname):
-        adr = ""
-        ALF = ROOT.new(type='ShaderNodeBsdfTransparent')
-        if "0t" in self.dct.keys():
-            adr = self.dct["0t"]
-        if os.path.exists(adr) == False:
-            LINK.new(ALF.outputs['BSDF'], cyclesOUT.inputs[0])
-            LINK.new(ALF.outputs['BSDF'], eeveeOUT.inputs[0])
-            return
-        SNTIMG = ROOT.new(type='ShaderNodeTexImage')
-        SNTIMG.name = Global.img_format(mname ,"t")
-        img = bpy.data.images.load(filepath=adr)
-        SNTIMG.image = img
-        MIX = ROOT.new(type='ShaderNodeMixShader')
-        DIF = ROOT.new(type='ShaderNodeBsdfDiffuse')
-        IVT = ROOT.new(type='ShaderNodeInvert')
-        DIF.inputs['Color'].default_value = (0.1,0.1,0.1,1)
-        DIF.inputs['Roughness'].default_value = 0.2
-        nodemap = [
-        [IVT.inputs['Color'], SNTIMG.outputs['Color']],
-        [ MIX.inputs[0], IVT.outputs['Color']],
-        [MIX.inputs[2], ALF.outputs['BSDF']],
-        [MIX.inputs[1],DIF.outputs['BSDF']],
-        [MIX.outputs[0], cyclesOUT.inputs[0]],
-        [MIX.outputs[0], eeveeOUT.inputs[0]]
-        ]
-        for n in nodemap:
-            LINK.new(n[0],n[1])
 
     def bodyTexture(self):
         moisture_count = 0
@@ -335,7 +308,6 @@ def adjust_material(kind,inc_value,isEye):
                     cg = cg * 2#0.5
                 elif tidx==16:
                     cg = cg * 0.2
-
             cg = cg * inc_value
             if tidx==15:
                 dv[0] += cg * 10
@@ -575,7 +547,8 @@ class McyEyeWet:
                     [[5, 0], [8, 1]],
         ]
         connect_group(con_nums, self.mcy_eyewet, self.shaders, generatenames)
-gio4 = ['NodeSocketColor', 'NodeSocketFloat', 'NodeSocketVector', 'NodeSocketShader']
+
+
 
 def connect_group(con_nums,ngroup,shaders,generatenames):
     ROOT = ngroup.nodes
@@ -936,7 +909,6 @@ def getTexKigo(tex_node):
     if len(tex_node.outputs)==0 or tex_node.outputs[0].is_linked==False:
         return "x"
     skt = tex_node.outputs[0].links[0].to_socket
-    print("SKT",skt.name)
     for ft in ftable:
         if skt.name=='Base Color' and ft[1]=='Diffuse':
             return ft[0]

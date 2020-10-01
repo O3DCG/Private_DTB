@@ -1008,7 +1008,6 @@ def normal_and_bump_to_size():
         for slot in obj.material_slots:
             mat = bpy.data.materials.get(slot.name)
             if mat is None or mat.node_tree is None:
-                print(mat,mat.node_tree)
                 continue
             ROOT = mat.node_tree.nodes
 

@@ -40,7 +40,7 @@ class IMP_OT_dir(bpy.types.Operator, ImportHelper):
             )
 
     def execute(self, context):
-        if os.path.isfile(self.filepath):
+        if os.path.isfile(self.filepath) or self.filepath.endswith(".blend"):
             self.filepath = os.path.dirname(self.filepath)
         md = MatDct.MatDct()
         if self.filepath.endswith("\\"):
@@ -134,15 +134,6 @@ class Command:
             Get_Genital()
         elif key=='finger' and Global.getAmtr() is not None:
             Global.finger(0)
-        elif key=='realsize':
-            if Global.getAmtr() is None:
-                Versions.msg("This function is effective only in the basic mode", "Message", 'INFO')
-                return
-            if Global.getSize() == 1:
-                Versions.msg("Already Real Size", "Message", 'INFO')
-                return
-            Global.changeSize(1,[])
-            Global.scale_environment()
         elif key=='gettexture':
             bpy.ops.imp.material('INVOKE_DEFAULT')
         elif key=='clearextrabones':
@@ -174,10 +165,10 @@ class Command:
             Versions.active_object(Global.getBody())
             removeEyelash()
             Global.setOpsMode("OBJECT")
-        elif key=='realskin':
-            DtbMaterial.skin_levl(True)
-        elif key=='easyskin':
-            DtbMaterial.skin_levl(False)
+        # elif key=='realskin':
+        #     DtbMaterial.skin_levl(True)
+        # elif key=='easyskin':
+        #     DtbMaterial.skin_levl(False)
         elif key=='myheros':
             print(Global.getAmtr(),Global.getRgfy(),Global.getBody(),Global.getEnvRoot(),Global.getSize(),Util.cur_col_name(),
                   "*",Global.get_Amtr_name(),Global.get_Rgfy_name(),Global.get_Body_name())

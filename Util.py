@@ -64,9 +64,6 @@ def cur_col_name():
             _CURRENT_COL = ""
     return _CURRENT_COL
 
-
-
-
 def getCurrentCollection():
     ccname = cur_col_name()
     if ccname is None or ccname == "":
@@ -389,28 +386,6 @@ class Posing:
                         if xi in bname:
                             if v3[1] == 0:
                                 v3[2] = 0 - v3[2]
-                    # if bname=='hip':
-                    #     if v3[1]==2:
-                    #         v3[1] = 1
-                    #     elif v3[1]==1:
-                    #         v3[1] = 0
-                    #         v3[2] = 0 - v3[2]
-                    #     elif v3[1]==0:
-                    #         v3[1] = 2
-                    #         v3[2] = 0 - v3[2]
-
-                    # if v3[1]==2:
-                    #    v3[1] = 0
-                    #    v3[2] = 0-v3[2]
-                    # elif v3[1]==1:
-                    #    v3[1] = 2
-                    # elif v3[1]==0:
-                    #    v3[1] = 1
-
-                    # if v3[1] == 1:
-                    #     v3[1] = 2
-                    # elif v3[1] == 2:
-                    #     v3[1] = 1
                     y_invert = ['Shin']#,'hip']
                     for yi in y_invert:
                         if yi in bname:
@@ -435,6 +410,7 @@ class Posing:
                         pbs[v3[0]].rotation_euler[v3[1]] = math.radians(v3[2])
         cur.pop(len(cur) - 1)
         cur.pop(len(cur) - 1)
+
     def setpose(self):
         v3ary = []
         Versions.active_object(Global.getAmtr())

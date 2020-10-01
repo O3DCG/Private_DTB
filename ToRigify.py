@@ -63,7 +63,7 @@ class ToRigify:
         if dobj is None:
             return
         if len(Global.get_bone_limit())==0:
-            Global.bone_limit_modify();
+            Global.bone_limit_modify()
         wm.progress_update(5)
         Versions.select(dobj, True)
         Versions.active_object(dobj)
@@ -92,24 +92,17 @@ class ToRigify:
         self.fitMetaFace(db)
         wm.progress_update(20)
         Global.setOpsMode('OBJECT')
-        
         rtn = self.generate_rig()
         if rtn!="":
             main.report({"ERROR"},rtn)
             return
-
         Global.setOpsMode('EDIT')
-
-        #Versions.undo_chest_upper(bpy.context.active_object,self.chest_upper_tail)
-
         wm.progress_update(30)
         self.all_rigity_bone(db)
-
         wm.progress_update(40)
         Global.setOpsMode('EDIT')
         #self.fit2Rig(blist, db, 1)
         self.fit2Rig(blist, db, 2)
-
         ############################################################
         wm.progress_update(50)
         self.adjust_tweak()
@@ -135,10 +128,9 @@ class ToRigify:
         Versions.active_object(Global.getAmtr())
         self.omit_g8(db)
         Util.allobjs().remove(self.METARIG)
-        #Util.myccobjs().remove(Util.myccobjs().get('metarig'))
         wm.progress_update(70)
         Global.deselect()
-        amtr = self.RIG#Util.myccobjs().get('rig')
+        amtr = self.RIG
         for ao in self.amtr_objs:
             if ao in Util.myccobjs():
                 d = Util.myccobjs().get(ao)
@@ -202,11 +194,10 @@ class ToRigify:
             for b in aobj.data.bones:
                 amtr_bones.append(b.name)
             Versions.select(aobj,True)
-            robj = self.RIG#Util.myccobjs().get('rig')
+            robj = self.RIG
             Versions.select(robj, True)
             Versions.active_object(robj)
             bpy.ops.object.join()
-            #robj =  Util.myccobjs().get('rig')
             Global.setOpsMode('EDIT')
             for eb in robj.data.edit_bones:
                 if eb.name in amtr_bones and eb.parent is None:
