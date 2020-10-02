@@ -20,9 +20,9 @@ class EnvProp:
 
     def __init__(self):
         Util.deleteEmptyDazCollection()
-        self.bstart()
+        self.estart()
 
-    def bstart(self):
+    def estart(self):
         wm = bpy.context.window_manager
         wm.progress_begin(0, 100)
         Versions.active_object_none()
@@ -84,6 +84,7 @@ class ReadFbx:
             Octane.Octane()
         Global.scale_environment()
 
+    #Read Binary FBX
     def readFbx(self):
         self.my_meshs = []
         adr = self.adr + "B_ENV.fbx"
@@ -142,6 +143,7 @@ class ReadFbx:
                     return ss
         return None
 
+    #Read Asc FBX
     def readAsc(self):
         adr = self.adr + "A_ENV.fbx"
         if os.path.exists(adr) == False:
@@ -193,8 +195,6 @@ class ReadFbx:
                             self.asc_ary.append(yoko)
                             if pidx>0:
                                 break
-        #for aa in self.asc_ary:
-        #    print(aa)
 
     def Maru(self):
         if 'daz_door' in Util.colobjs('DAZ_HIDE'):
@@ -240,7 +240,6 @@ class ReadFbx:
         vgroups = []
         empty_objs = []
         amtr_objs = []
-
         for i in range(3):
             amtr.scale[i] = 1
         for obj in objs:
@@ -287,14 +286,9 @@ class ReadFbx:
             else:
                 if '1' not in binfo[7:]:
                     hides.append(eb.name)
-
-                    # for bidx,bi in enumerate(binfo):
-                    #     if bidx>6:
-                    #         binfo[bidx] = 1
             if notbuilding:
                 for i in range(3):
                     eb.tail[i] = float(binfo[4 + i])
-
             else:
                 len = 100
                 eb.roll = 0
@@ -451,19 +445,6 @@ class ReadFbx:
                                     elif asc[0]=='T':
                                         if bcolor_by_asc =="":
                                             bcolor_by_asc = asc[2]
-
-                            # two_in = ['Base Color','Alpha']
-                            # targ = ['d','t']
-                            # for tidx,ti in enumerate(two_in):
-                            #     if mainNode.inputs.get(ti) is not None:
-                            #         lnks = mainNode.inputs[ti].links
-                            #         for lnk in lnks:
-                            #             node = lnk.from_node
-                            #             if node.name.startswith('Image Texture'):
-                            #                 node.name = Global.img_format(mat.name,targ[tidx])
-                            #                 if tidx==0:
-                            #                     bcolor_by_asc = node.image.filepath
-                            #                 break
                             if bcolor_by_asc !="":
                                 from . import MatDct
                                 mm = MatDct.MatDct()

@@ -131,6 +131,8 @@ class DtbDazMorph():
                         if self.flg_human and idx >= self.human_max:
                             break
                         sc = 1.0
+                        if Global.getSize()==1:
+                            sc = 0.01
                         f.write(
                             "v " + str(v.co[0] / sc) + " " + str(v.co[2] / sc) + " " + str(0 - v.co[1] / sc) + "\n")
 
@@ -144,6 +146,8 @@ class DtbDazMorph():
                     if v.index >= self.human_max:
                         break
                     sc = 1.0
+                    if Global.getSize() == 1:
+                        sc = 0.01
                     f.write("v " + str(v.co[0] / sc) + " " + str(v.co[2] / sc) + " " + str(0 - v.co[1] / sc) + "\n")
                 for lcnt, l in enumerate(self.basicfaces()):
                     f.write(l)
@@ -156,6 +160,7 @@ class DtbDazMorph():
             max3 = Global.getMyMax3()
             now_lev = Global.getSubdivLevel()
             self.human_max = max3[now_lev]
+            self.flg_human = True
         self.basicfaces()
 
     def basicfaces(self):
